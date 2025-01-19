@@ -1,0 +1,93 @@
+﻿@model Restaurant_Management_System.Areas.User.ViewModel.OrderViewModel;
+@{
+    ViewData["Title"] = "Order Confirmation";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+}
+
+<style>
+    .confirmation-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        margin-top: 50px;
+    }
+
+    .order-details {
+        margin-top: 20px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        width: 50%;
+        background-color: #f9f9f9;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .order-details table {
+        width: 100%;
+        color:black;
+    }
+
+    .order-details th, .order-details td {
+        padding: 10px;
+        text-align: left;
+    }
+
+    .success-message {
+        font-size: 24px;
+        font-weight: bold;
+        color: #28a745;
+    }
+
+    .thank-you-message {
+        margin-top: 10px;
+        font-size: 18px;
+        color: #555;
+    }
+
+    .btn-home {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        border: none;
+        background-color: #007bff;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn-home:hover {
+        background-color: #0056b3;
+    }
+</style>
+
+<div class="confirmation-container">
+    <div class="success-message">Your Order has been Confirmed!</div>
+    <div class="thank-you-message">Thank you for shopping with us. Your order is being processed.</div>
+
+    <div class="order-details">
+        <h3>Order Summary</h3>
+        <table>
+            <tr>
+                <th>Order ID:</th>
+                <td>@Model.OrderID</td>
+            </tr>
+            <tr>
+                <th>Date:</th>
+                <td>@Model.OrderDate.ToString("dd MMM yyyy, hh:mm tt")</td>
+            </tr>
+            <tr>
+                <th>Status:</th>
+                <td>@Model.Status</td>
+            </tr>
+            <tr>
+                <th>Total Amount:</th>
+                <td><i class="fa fa-rupee"></i> @Model.TotalAmount</td>
+            </tr>
+        </table>
+    </div>
+
+    <a href="@Url.Action("Index", "Home")" class="btn-home">Return to Home</a>
+</div>

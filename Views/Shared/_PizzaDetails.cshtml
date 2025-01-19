@@ -1,0 +1,9 @@
+﻿@model Restaurant_Management_System.Areas.Admin.Models.MenuModel
+<div class="card mb-3">
+    <img src="~/upload_images/@(Model.ImagePath)" class="card-img-top" alt="Pizza Image">
+    <div class="card-body">
+        <h5 class="card-title">@(Model.Name)</h5>
+        <p class="card-text">@(Model.Description)</p>
+        <p class="card-text text-info">@(Model.Price)&nbsp;&nbsp;<i class="fa fa-rupee"></i></p>
+    </div>
+</div>

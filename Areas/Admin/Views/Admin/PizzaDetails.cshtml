@@ -1,0 +1,25 @@
+﻿@model Restaurant_Management_System.Areas.Admin.Models.MenuModel
+@using Microsoft.AspNetCore.Http;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor accessor
+@{
+    ViewData["Title"] = "PizzaDetails";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<div>
+    <partial name="_PizzaDetails" model="Model"/>
+</div>
+<div>
+    @{
+        if(accessor.HttpContext.Session.GetString("Role") == "Admin")
+        {
+            @Html.ActionLink("Edit", "EditPizza", "Admin", new { area = "Admin", id = Model.PizzaID }, new { @class = "btn btn-primary" })
+            @Html.ActionLink("Delete", "DeletePizza", "Admin", new { area = "Admin", id = Model.PizzaID }, new { @class = "btn btn-danger ms-3" })
+            @Html.ActionLink("Back To List", "Edit", "Admin", new { area = "Admin", id = Model.PizzaID }, new { @class = "btn btn-info ms-3" })
+        }
+        else
+        {
+            @Html.ActionLink("Back To List", "Index", "User", new { area = "User", id = Model.PizzaID }, new { @class = "btn btn-info" })
+        }
+    }
+    
+</div>

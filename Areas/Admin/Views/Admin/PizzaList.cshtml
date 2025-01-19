@@ -1,0 +1,17 @@
+﻿@model IEnumerable<Restaurant_Management_System.Areas.Admin.Models.MenuModel>
+
+@{
+    ViewData["Title"] = "PizzaList";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container">
+    <div class="row">
+        @foreach(var item in Model)
+        {
+            <div class="col-md-4 mb-2">
+                <partial name="_PizzaCard" model="item" />
+            </div>
+        }
+    </div>
+</div>

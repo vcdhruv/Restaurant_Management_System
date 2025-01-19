@@ -1,0 +1,277 @@
+﻿@model IEnumerable<Restaurant_Management_System.Areas.User.ViewModel.CartViewModel>
+
+@{
+    ViewData["Title"] = "Cart";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+}
+<style>
+    
+    .minus:hover{
+        background-color:red;
+        color:black;
+        cursor:pointer;
+    }
+    .plus:hover{
+        background-color:black;
+        color:black;
+        cursor:pointer;
+    }
+    .box{
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        gap:10px;
+    }
+    .box1{
+        width: 40px;
+        aspect-ratio:1;
+        text-align: center;
+        border-radius: 5px;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+    }
+    .rupees{
+        display:flex;
+        justify-content:end;
+        align-items:center;
+    }
+</style>
+
+@if(Model.Any())
+{
+    <h1 style="display:flex; justify-content:center; align-items:center">Your Cart</h1>
+
+    <table class="table table-bordered text-center" id="cartTable">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.Name)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Price)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Quanity)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.TotalAmount)
+                </th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody class="cartBody">
+            @foreach (var item in Model)
+            {
+                <input type="hidden" name="@item.ItemID" />
+                <tr class="cartRow">
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </td>
+                    <td class="price">
+                        <i class="fa fa-rupee text-info"></i>&nbsp;@Html.DisplayFor(modelItem => item.Price)
+                    </td>
+                    <td class="box">
+                        <div class="box1 border-1 bg-danger minus">
+                            <i class="fa fa-minus"></i>
+                        </div>
+                        <div class="box1 border-1 bg-secondary text-dark fs-6 fw-bold Quantity" id="qty-@item.PizzaID">
+                            @Html.DisplayFor(modelItem => item.Quanity)
+                        </div>
+                        <div class="box1 border-1 bg-success plus">
+                            <i class="fa fa-plus"></i>
+                        </div>
+                    </td>
+                    <td class="totalAmt">
+                        <i class="fa fa-rupee text-info"></i>&nbsp;@Html.DisplayFor(modelItem => item.TotalAmount)
+                    </td>
+                    <td>
+                        <a asp-area="User" asp-controller="User" asp-action="DeleteCartItem" asp-route-ItemID="@item.ItemID">
+                            <i class="fa fa-trash-o text-danger"></i>
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div class="container">
+        <input type="hidden" id="cartID" value="@Model.FirstOrDefault()?.CartID" />
+        <table class="table">
+            <tr>
+                <td class="fw-bold fs-6">Sub Total</td>
+                <td class="fw-bold fs-5 rupees"><i class="fa fa-rupee" id="subtotal"> 0</td>
+            </tr>
+            <tr>
+                <td class="fw-bold fs-6">GST</td>
+                <td class="fw-bold fs-5 rupees"><i class="fa fa-rupee" id="gst"> 0</td>
+            </tr>
+            <tr>
+                <td class="fw-bold text-info fs-4">To Pay</td>
+                <td class="fw-bold fs-4 rupees"><i class="fa fa-rupee" id="payableAmt"> 0</td>
+            </tr>
+        </table>
+        <a id="CheckOut" class="btn btn-primary fs-5 fw-bold" style="display:flex;justify-content:center;align-items:center">Check Out</a>
+    </div>
+}
+else
+{
+    <div class="container fw-bold fs-4" style="display:flex;justify-content:center;align-items:center;width:100%">
+        No Items Available
+    </div>
+}
+
+
+
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    $(document).ready(function () {
+
+        CalculateSubtotal();
+        CalculateGST();
+        CalculatePayableAmount();
+
+        $('.plus').click(function () {
+            // Get the current row
+            var row = $(this).closest('tr');
+
+            // Find the Quantity element for the current row using its dynamic ID
+            var qtyElement = row.find('.Quantity');
+            var qty = parseInt(qtyElement.text());
+
+            // Increment the quantity
+            ++qty;
+
+            // Update the quantity text in the current row
+            qtyElement.text(qty);
+
+            // Optionally, send the update to the server
+            var pizzaID = parseInt(row.find('.Quantity').attr('id').split('-')[1]); // Extract PizzaID
+            console.log(pizzaID)
+
+            AjaxCode(pizzaID, qty);
+
+
+            var priceElement = row.find('.price');
+            var price = priceElement.text();
+
+            var totalAmtElement = row.find('.totalAmt');
+            var totalAmt = totalAmtElement.text();
+            // console.log(price)
+            // console.log(totalAmt)
+
+            totalAmt = price * qty
+            console.log(totalAmt)
+            totalAmtElement.html('<i class="fa fa-rupee text-info"></i>&nbsp;' + totalAmt);
+            CalculateSubtotal();
+            CalculateGST();
+            CalculatePayableAmount();
+        });
+
+        $('.minus').click(function () {
+            // Get the current row
+            var row = $(this).closest('tr');
+
+            // Find the Quantity element for the current row using its dynamic ID
+            var qtyElement = row.find('.Quantity');
+            var qty = parseInt(qtyElement.text());
+
+            // Increment the quantity
+            --qty;
+
+            // Update the quantity text in the current row
+            qtyElement.text(qty);
+
+            // Optionally, send the update to the server
+            var pizzaID = parseInt(row.find('.Quantity').attr('id').split('-')[1]); // Extract PizzaID
+            console.log(pizzaID)
+
+            AjaxCode(pizzaID, qty);
+
+            var priceElement = row.find('.price');
+            var price = priceElement.text();
+
+            var totalAmtElement = row.find('.totalAmt');
+            var totalAmt = totalAmtElement.text();
+            // console.log(price)
+            // console.log(totalAmt)
+
+            totalAmt = price * qty
+            console.log(totalAmt)
+            totalAmtElement.html('<i class="fa fa-rupee text-info"></i>&nbsp;' + totalAmt);
+            CalculateSubtotal();
+            CalculateGST();
+            CalculatePayableAmount();
+        });
+
+        function AjaxCode(pizzaID, Quantity) {
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("UpdateQuantity", "User")',
+                data: { PizzaID: pizzaID, Qty: Quantity },
+                success: function (response) {
+                    console.log("server success response : " + response);
+                },
+                error: function (response) {
+                    console.log("server error response : " + response);
+                }
+            });
+        }
+
+        function CalculateSubtotal() {
+            amt = document.getElementsByClassName('totalAmt');
+            // console.log(amt)
+
+            var subtotal = 0
+
+            console.log(subtotal)
+            for (let index = 0; index < amt.length; index++) {
+                subtotal += parseFloat(amt[index].innerHTML.split('&nbsp;')[1])
+            }
+            document.getElementById('subtotal').innerHTML = subtotal
+            console.log(subtotal)
+            return subtotal;
+        }
+
+        function CalculateGST() {
+            let gst = 0;
+            var amt = parseInt(document.getElementById('subtotal').innerHTML);
+            gst = ((amt * 10) / 100);
+            document.getElementById('gst').innerHTML = gst;
+            return gst;
+        }
+
+        function CalculatePayableAmount(){
+            var payableAmount = parseFloat(parseFloat(CalculateSubtotal()) + parseFloat(CalculateGST()));
+            document.getElementById('payableAmt').innerHTML = payableAmount;
+            return payableAmount;
+        }
+
+        $('#CheckOut').click(function () {
+            CheckOut();
+        });
+
+        function CheckOut() {
+            var cartID = $('#cartID').val();
+            var payable_amt = CalculatePayableAmount();
+            console.log("Checkout cart id : " + cartID)
+
+            console.log("Checkout payable amount : "+payable_amt)
+            $.ajax({
+                type:'POST',
+                url: '@Url.Action("CheckOut","User")',
+                data: { CartID: cartID, payable_amount:payable_amt },
+                success : function (response){
+                    console.log("server success response : " + response)
+                    window.location.href = '@Url.Action("PlaceOrder", "User")'; // since ajax will prevent navigation so forecfully added
+                },
+                error: function (response) {
+                    console.log("server error response : " + response);
+                }
+            });
+        }
+    });
+</script>

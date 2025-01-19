@@ -1,0 +1,65 @@
+﻿@model Restaurant_Management_System.Areas.Register.Models.RegisterationModel
+
+@{
+    ViewData["Title"] = "Edit";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Deactivate</h1>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-area="Admin" asp-controller="Admin" asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            @Html.HiddenFor(m => m.UserID)
+
+
+            <div class="form-check form-check-success">
+                <label class="form-check-label fw-bolder text-light fs-6">
+                    <input id="flexCheckChecked" type="checkbox" class="form-check-input" @(ViewBag.state == 1 ? "checked" : "")> Is Active <i class="input-helper"></i>
+                </label>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+<script>
+
+    $(document).ready(function() {
+        var userID = $('#UserID').val();
+
+        console.log('User ID : ' , userID);
+
+        $('#flexCheckChecked').on('change', function () {
+
+            var is_active = $(this).is(':checked') ? 1 : 0;
+
+            console.log('Checkbox value changed:',is_active);
+
+
+            $.ajax({
+
+                type:'POST',
+                url: '@Url.Action("ToggleIsActive","Admin")',
+                data: { id : userID , is_active : is_active },
+                success : function (response) {
+                    console.log('server response : ', response);
+                },
+                Error : function (response) {
+                    console.log('error occurred');
+                }
+            });
+        });
+    });
+</script>
+<div>
+    <a asp-area="Admin" asp-controller="Admin" asp-action="UserList" class="btn btn-info btn-fw">Back To List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

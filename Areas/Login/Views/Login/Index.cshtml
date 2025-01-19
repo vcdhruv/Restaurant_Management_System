@@ -1,0 +1,39 @@
+﻿@{
+    Layout = "~/Views/Shared/_LoginLayout.cshtml";
+    ViewData["Title"] = "Index";
+}
+@model Restaurant_Management_System.Areas.Login.Models.LoginModel
+
+<link rel="stylesheet" href="~/css/loginpage.css" />
+<div class="login_container">
+    <h3 class="text-center text-danger">@ViewBag.is_active_msg</h3>
+    <h1 class="register_txt">login</h1>
+    <hr />
+    <div class="row m-auto">
+        <div class="col-md-12">
+            <form asp-action="Index" asp-area="Login" asp-controller="Login">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group">
+                    <label asp-for="email" class="control-label"></label>
+                    <input asp-for="email" class="form-control" />
+                    <span asp-validation-for="email" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="password" class="control-label"></label>
+                    <input asp-for="password" class="form-control" />
+                    <span asp-validation-for="password" class="text-danger"></span>
+                </div>
+                <div class="form-group mt-2">
+                    <input type="submit" value="Login" class="btn btn-primary" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label login_txt"> <a asp-action="Index" asp-controller="Register" asp-area="Register"> Go Back </a></label>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,171 @@
+﻿@using Restaurant_Management_System.Areas.Admin.ViewModel
+@model IEnumerable<Restaurant_Management_System.Areas.Admin.Models.OrderHistoryModel>
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor accessor
+@using Microsoft.AspNetCore.Http;
+@{
+    ViewData["Title"] = "OrderHistory";
+    if (accessor.HttpContext.Session.GetString("Role") == "User")
+    {
+        Layout = "~/Views/Shared/_UserLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    }
+}
+<div class="table-responsive">
+    <table class="table text-center">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.OrderID)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.UserName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.TotalAmount)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.OrderDate)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Status)
+                </th>
+                @if(accessor.HttpContext.Session.GetString("Role") == "Admin")
+                {
+                    <th>Update</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <input type="hidden" value="@item.UserID" id="User_@item.OrderID"/>
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.OrderID)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.UserName)
+                    </td>
+
+                    <td>
+                        <i class="fa fa-rupee"></i>&nbsp;@Html.DisplayFor(modelItem => item.TotalAmount)
+                    </td>
+                    <td>
+                        @item.OrderDate.ToString("dd MMM yyyy, hh:mm tt")
+                    </td>
+                    <td>
+                        <label class="badge @(item.Status == "Pending" ? "badge-warning" :
+                                              item.Status == "Dispatched" ? "badge-info" :
+                                              item.Status == "Delivered" ? "badge-success" :
+                                              item.Status == "Preparing" ? "badge-primary" :
+                                              item.Status == "Canceled" ? "badge-danger" : "badge-secondary")"
+                               id="statusLabel_@item.OrderID">
+                            @item.Status
+                        </label>
+
+                    </td>
+                    @if (accessor.HttpContext.Session.GetString("Role") == "Admin")
+                    {
+                        <td>
+                            @Html.DropDownList(
+                                     $"Status_{item.OrderID}", // Unique ID for each dropdown
+                                     Html.GetEnumSelectList<Status>(),
+                                     new { @class = "form-control text-white text-center statusDropdown", data_orderid = item.OrderID } // Additional attributes for styling
+                                     )
+                        </td>
+                    }
+                    
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    $(document).ready(function () {
+
+        // establish a connection to signalR Hub
+        var connection = new signalR.HubConnectionBuilder().withUrl("/statusUpdateHub").build();
+
+        connection.start()
+            .then(() => console.log("SignalR connection established."))
+            .catch(err => console.error("SignalR connection failed: " + err.toString()));
+
+
+        $('.statusDropdown').on('change', function () {
+
+            // Get the selected value
+            var selectedValue = parseInt($(this).val());
+
+            var orderId = parseInt($(this).data('orderid'));
+            
+            var statusLabel = $('#statusLabel_' + orderId);
+            var statusText = '';
+
+            var userID = $('#User_' + orderId).val();
+
+            console.log("selected value : " + selectedValue);
+            console.log("Order ID : " + orderId);
+            console.log("User ID : " + userID);
+
+            switch (selectedValue) {
+                case 0: statusText = "Pending"; break;
+                case 1: statusText = "Dispatched"; break;
+                case 2: statusText = "Delivered"; break;
+                case 3: statusText = "Canceled"; break;
+            }
+
+            if (statusLabel.length) {
+                
+                statusLabel.text(statusText);
+
+                statusLabel.removeClass('badge-warning badge-danger badge-success badge-info').addClass(SelectClass(statusText))
+            }
+
+            // Send the status update to the SignalR Hub
+            connection.invoke("SendStatusUpdate", orderId, statusText)
+                .catch(function (err) {
+                    console.error("invoke error : " + err.toString());
+                });
+
+            $.ajax({
+                type : 'POST',
+                url: '@Url.Action("UpdateStatus", "Admin")',
+                data: { UserID: userID, status: statusText },
+                success: function (response) {
+                    console.log('server success response : ' + response);
+                },
+                error: function (response) {
+                    console.log('server error response : ' + response);
+                }
+            });
+
+        })
+
+        function SelectClass(status) {
+            switch (status) {
+                case 'Pending': return 'badge-warning';
+                case 'Dispatched': return 'badge-info';
+                case 'Delivered': return 'badge-success';
+                case 'Canceled': return 'badge-danger';
+            }
+        }
+
+        // Listen for real-time status updates and update the UI
+        connection.on("ReceiveStatusUpdate", function (orderId, status) {
+            console.log("Received status update: ", orderId, status);
+            var statusLabel = $('#statusLabel_' + orderId);
+            if (statusLabel.length) {
+                statusLabel.text(status);
+                statusLabel.removeClass('badge-warning badge-danger badge-success badge-info')
+                    .addClass(SelectClass(status));
+            }
+        });
+       
+    });
+</script>
+

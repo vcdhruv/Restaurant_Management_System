@@ -1,0 +1,85 @@
+﻿@model Restaurant_Management_System.Areas.Admin.Models.MenuModel
+@using Microsoft.AspNetCore.Http;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor accessor
+<style>
+    .card {
+        height: 21.875rem; /* Adjust height to your preference */
+    }
+
+    .card-body {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between; /* Ensures even spacing */
+        overflow: hidden; /* Ensures longer descriptions don’t break layout */
+    }
+
+    .card-text {
+        flex-grow: 1; /* Allows descriptions to adjust within the card body */
+        overflow: hidden;
+        text-overflow: ellipsis; /* Adds "..." for long descriptions */
+        white-space: nowrap; /* Prevents wrapping */
+    }
+
+</style>
+<div class="card" style="width: 18rem; height: 100%; display: flex; flex-direction: column;">
+    @Html.HiddenFor(m => m.PizzaID)
+    <img src="~/upload_images/@(Model.ImagePath)" asp-append-version="true" class="card-img-top" alt="...">
+    <div class="card-body d-flex flex-column">
+        <h5 class="card-title">@(Model.Name)</h5>
+        <p class="card-text clamp-2-lines">@(Model.Description)</p>
+        <p class="card-text text-info">@(Model.Price)&nbsp;&nbsp;<i class="fa fa-rupee"></i></p>
+        <p>@(Model.PizzaID)</p>
+        <a href="javascript:void(0);"
+           class="btn btn-danger mt-auto mb-2"
+           id="addToCartBtn-@(Model.PizzaID)"
+           onclick="addToCart(this, @(Model.PizzaID))">
+            Add To Cart
+        </a>
+        @* @Html.ActionLink("Add To Cart", "AddToCart", "User", new { area = "User", id = Model.PizzaID }, new { @class = "btn btn-danger mt-auto mb-2" }) *@
+        @Html.ActionLink("View Pizza", "PizzaDetails", "Admin", new { area = "Admin", id = Model.PizzaID }, new { @class = "btn btn-primary mt-auto" })
+        @* <a asp-area="Admin" asp-controller="Admin" asp-action="PizzaDetails" name="@(Model.PizzaID)" class="btn btn-primary mt-auto">View Pizza</a> *@
+    </div>
+</div>
+<script>
+    function addToCart(element, pizzaID) {
+        // Disable the button immediately for better UX
+        disable(element);
+
+        // Perform AJAX to send the request to the server
+        $.ajax({
+            type: 'POST',
+            url: '@Url.Action("AddToCart", "User")',
+            data: { id: pizzaID },
+            success: function (response) {
+                console.log('Server response:', response);
+
+                // Optionally update the button state based on server response
+                element.textContent = response.success ? "Added To Cart" : "Failed";
+                if (!response.success) {
+                    element.classList.remove('disabled');
+                    element.style.pointerEvents = 'auto';
+                }
+            },
+            error: function () {
+                console.error('Error occurred while adding to cart');
+
+                // Re-enable the button if the request fails
+                element.classList.remove('disabled');
+                element.style.pointerEvents = 'auto';
+                element.textContent = "Add To Cart";
+            }
+        });
+    }
+
+    function disable(element) {
+        element.classList.add('disabled'); // Disable visually
+        element.style.pointerEvents = 'none'; // Disable interaction
+        element.textContent = "Adding..."; // Indicate loading
+    }
+
+</script>
+
+@* The javascript: prefix indicates that the following content is JavaScript code. *@
+@* void is a JavaScript operator that evaluates the given expression and returns undefined. *@
+@* void(0) specifically ensures that no action is performed (e.g., no page navigation or reload). *@
+@* Setting href="javascript:void(0)" prevents the <a> tag from navigating to a new page or triggering any default link behavior. *@
